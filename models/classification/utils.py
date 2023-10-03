@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@Author: Zhoufu Ren <ren.scsh@outlook.com>
+@Author:  
 @license: MIT-license
 
 This is a demo python script

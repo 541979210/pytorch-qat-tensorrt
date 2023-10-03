@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@Author: Zhoufu Ren <ren.scsh@outlook.com>
+@Author:
 @license: MIT-license
 
 This is a demo python script
@@ -50,7 +50,7 @@ def get_parser():
     parser.add_argument('--data-dir', '-d', type=str, default=r'D:\code\projects\data\tiny-imagenet-200', help='input data folder')
     parser.add_argument('--model-name', '-m', default='resnet50', help='model name: default resnet50')
     parser.add_argument('--disable-pcq', '-dpcq', action="store_true", help='disable per-channel quantization for weights')
-    parser.add_argument('--out-dir', '-o', default='/tmp', help='output folder: default /tmp')
+    parser.add_argument('--out-dir', '-o', default='tmp', help='output folder: default /tmp')
     parser.add_argument('--print-freq', '-pf', type=int, default=20, help='evaluation print frequency: default 20')
     parser.add_argument('--threshold', '-t', type=float, default=-1.0, help='top1 accuracy threshold (less than 0.0 means no comparison): default -1.0')
 
@@ -58,7 +58,7 @@ def get_parser():
     parser.add_argument('--batch-size-test', type=int, default=16, help='batch size for testing: default 128')
     parser.add_argument('--batch-size-onnx', type=int, default=1, help='batch size for onnx: default 1')
 
-    parser.add_argument('--seed', type=int, default=12345, help='random seed: default 12345')
+    parser.add_argument('--seed', type=int, default=666, help='random seed: default 12345')
 
     checkpoint = parser.add_mutually_exclusive_group(required=True)
     checkpoint.add_argument('--ckpt-path', default='', type=str,
@@ -115,7 +115,7 @@ def prepare_model(
         ]
     """
     # Use 'spawn' to avoid CUDA reinitialization with forked subprocess
-    torch.multiprocessing.set_start_method('spawn')
+    # torch.multiprocessing.set_start_method('spawn')
 
     ## Initialize quantization, model and data loaders
     if per_channel_quantization:
@@ -156,7 +156,7 @@ def prepare_model(
 
     ## Prepare the data loaders
     traindir = os.path.join(data_dir, 'train')
-    valdir = os.path.join(data_dir, 'val')
+    valdir = os.path.join(data_dir, 'train_val')
     _args = collections.namedtuple("mock_args", [
         "model", "distributed", "cache_dataset", "val_resize_size", "val_crop_size", "train_crop_size", "interpolation",
         "ra_magnitude", "augmix_severity", "weights", "backend", "use_v2"
@@ -250,7 +250,7 @@ def main():
     for epoch in range(args.num_finetune_epochs):
         # Training a single epch
         if "print_freq" in inspect.signature(train_one_epoch).parameters:
-            train_one_epoch(model, criterion, optimizer, data_loader_train, "cuda", 0, 100)
+            train_one_epoch(model, criterion, optimizer, data_loader_test, "cuda", 0, 100)
         else:
             _args = collections.namedtuple("mock_args",
                                            ["print_freq", "clip_grad_norm", "model_ema_steps", "lr_warmup_epochs"])
@@ -262,7 +262,7 @@ def main():
         ## Evaluate after finetuning
         with torch.no_grad():
             print('Finetune evaluation:')
-            top1_finetuned = evaluate(model, criterion, data_loader_test, device="cuda")
+            top1_finetuned = evaluate(model, criterion, data_loader_train, device="cuda")
     else:
         top1_finetuned = -1.0
 
